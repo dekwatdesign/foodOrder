@@ -213,3 +213,89 @@ function getCurrentFiscalYear()
     return (int)$currentYear;
 }
 
+function getShopInfo($shop_ref) {
+    global $conn;
+
+    $shop_info = [];
+    
+    $sql = "SELECT
+                sh.id,
+                sh.shop_username,
+                sh.shop_title,
+                sh.shop_description,
+                sh.shop_image_logo,
+                sh.shop_image_cover,
+                sb.branch_title 
+            FROM
+                shops AS sh
+                INNER JOIN shops_branches AS sb ON sh.id = sb.shop_id 
+            WHERE
+                sh.id = '$shop_ref' 
+                OR sh.shop_username = '$shop_ref'";
+    $query = $conn->query($sql);
+    if ($query->num_rows > 0) {
+        while ($row = $query->fetch_assoc()) {
+            $shop_info = $row;
+        }
+    }
+
+    return $shop_info;
+}
+
+function getShopCategory($shop_ref) {
+    global $conn;
+
+    $cat_info = [];
+    
+    $sql = "SELECT
+                cat.id,
+                cat.category_name AS `name`
+            FROM
+                shops AS sh
+                INNER JOIN categories AS cat ON sh.id = cat.shop_id 
+            WHERE
+                ( sh.id = '$shop_ref' OR sh.shop_username = '$shop_ref' ) 
+                AND cat.category_type = 'product' 
+                AND cat.category_status = 'published' 
+            ORDER BY
+                cat.category_sort ASC";
+    $query = $conn->query($sql);
+    if ($query->num_rows > 0) {
+        while ($row = $query->fetch_assoc()) {
+            $cat_info[] = $row;
+        }
+    }
+
+    return $cat_info;
+}
+
+function getShopProducts($shop_ref, $cat_ref) {
+    global $conn;
+    $products = [];
+    $sql = "SELECT
+                cat.id AS cat_id,
+                cat.category_name AS cat_name,
+                pd.id AS prod_id,
+                pd.product_title,
+                pd.product_img,
+                pd.product_description,
+                pd.product_price,
+                img.file_key AS img_name,
+                img.file_extension AS img_ex 
+            FROM
+                categories AS cat
+                INNER JOIN products AS pd ON cat.id = pd.category_id
+                LEFT JOIN products_images AS img ON pd.id = img.product_id 
+            WHERE
+                cat.shop_id = '$shop_ref' 
+                AND pd.product_status = 'published' ";
+    $sql .= $cat_ref==0 ? "":" AND cat.id = '$cat_ref' ";
+    $query = $conn->query($sql);
+    if ($query->num_rows > 0) {
+        while ($row = $query->fetch_assoc()) {
+            $products[$row['cat_id']]['name'] = $row['cat_name'];
+            $products[$row['cat_id']]['products'][] = $row;
+        }
+    }
+    return $products;
+}
