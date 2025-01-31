@@ -1,7 +1,7 @@
 /*
- Navicat Premium Dump SQL
+ Navicat Premium Data Transfer
 
- Source Server         : MariaDB_localhost
+ Source Server         : [MariaDB] localhost
  Source Server Type    : MariaDB
  Source Server Version : 110502 (11.5.2-MariaDB-log)
  Source Host           : localhost:3306
@@ -11,7 +11,7 @@
  Target Server Version : 110502 (11.5.2-MariaDB-log)
  File Encoding         : 65001
 
- Date: 31/01/2025 16:38:30
+ Date: 31/01/2025 22:09:25
 */
 
 SET NAMES utf8mb4;
@@ -29,9 +29,8 @@ CREATE TABLE `categories`  (
   `category_type` enum('product','option') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `category_description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `category_status` enum('published','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'published',
-  `select_type` enum('sigle','nolimit','limit') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'sigle',
-  `select_limit` int(255) NULL DEFAULT 0,
-  `select_require` enum('Y','N') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'Y',
+  `select_min` int(11) NULL DEFAULT NULL,
+  `select_max` int(11) NULL DEFAULT 0,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `shop_id`(`shop_id` ASC) USING BTREE,
@@ -41,9 +40,9 @@ CREATE TABLE `categories`  (
 -- ----------------------------
 -- Records of categories
 -- ----------------------------
-INSERT INTO `categories` VALUES (1, 1, 1, 'จานหลัก', 'product', NULL, 'published', 'nolimit', NULL, 'Y', '2025-01-31 14:31:23');
-INSERT INTO `categories` VALUES (2, 1, 1, 'ท็อปปิ้ง', 'option', NULL, 'published', 'nolimit', NULL, 'Y', '2025-01-31 14:31:25');
-INSERT INTO `categories` VALUES (3, 1, 2, 'บรรจุภัณฑ์', 'option', NULL, 'published', 'nolimit', NULL, 'Y', '2025-01-31 14:31:27');
+INSERT INTO `categories` VALUES (1, 1, 1, 'จานหลัก', 'product', NULL, 'published', 0, 0, '2025-01-31 14:31:23');
+INSERT INTO `categories` VALUES (2, 1, 1, 'ท็อปปิ้ง', 'option', '1 อย่างขึ้นไป', 'published', 1, -1, '2025-01-31 14:31:25');
+INSERT INTO `categories` VALUES (3, 1, 2, 'บรรจุภัณฑ์', 'option', 'เลือกอย่างใดอย่างหนึ่ง', 'published', 1, 1, '2025-01-31 14:31:27');
 
 -- ----------------------------
 -- Table structure for discounts
@@ -237,7 +236,6 @@ CREATE TABLE `products`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `category_id` int(255) NULL DEFAULT NULL,
   `product_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `product_img` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `product_description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `product_status` enum('published','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'published',
   `product_sku` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
@@ -253,7 +251,7 @@ CREATE TABLE `products`  (
 -- ----------------------------
 -- Records of products
 -- ----------------------------
-INSERT INTO `products` VALUES (1, 1, 'ข้าวต้ม', NULL, NULL, 'published', NULL, NULL, -1, 10, '2025-01-30 23:32:47');
+INSERT INTO `products` VALUES (1, 1, 'ข้าวต้ม', NULL, 'published', NULL, NULL, -1, 10, '2025-01-30 23:32:47');
 
 -- ----------------------------
 -- Table structure for products_images
@@ -266,16 +264,17 @@ CREATE TABLE `products_images`  (
   `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `file_extension` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `file_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `file_status` enum('publish','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'publish',
+  `file_status` enum('published','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'published',
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `products_images_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of products_images
 -- ----------------------------
+INSERT INTO `products_images` VALUES (1, 1, '1', 'kowtomnanan_product_01.png', 'png', 'kowtomnanan_product_01', 'published', '2025-01-31 20:02:58');
 
 -- ----------------------------
 -- Table structure for products_options
@@ -286,9 +285,10 @@ CREATE TABLE `products_options`  (
   `product_id` int(11) NULL DEFAULT NULL,
   `category_id` int(11) NULL DEFAULT NULL,
   `option_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `option_description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `option_price` int(11) NULL DEFAULT NULL,
   `option_img` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `option_status` enum('created','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `option_status` enum('published','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'published',
   `option_qty` int(11) NULL DEFAULT NULL,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
@@ -296,29 +296,34 @@ CREATE TABLE `products_options`  (
   INDEX `category_id`(`category_id` ASC) USING BTREE,
   CONSTRAINT `products_options_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `products_options_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 24 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of products_options
 -- ----------------------------
-INSERT INTO `products_options` VALUES (1, 1, 1, 'กุ้ง', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (2, 1, 1, 'ไข่เยี่ยวม้า', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (3, 1, 1, 'เบคอน', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (4, 1, 1, 'ซี่โครงอบชีส', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (5, 1, 1, 'ตับหมู', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (6, 1, 1, 'หมูเด้ง', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (7, 1, 1, 'หมูกรอบ', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (8, 1, 1, 'ไข่เค็ม', 15, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (9, 1, 2, 'ไข่ต้ม', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (10, 1, 2, 'เห็ดหอม', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (11, 1, 2, 'ปูอัด', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (12, 1, 2, 'ไก่ฉีก', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (13, 1, 2, 'ไข่ลวก', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (14, 1, 2, 'หมูยอ', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (15, 1, 2, 'หมูหยอง', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (16, 1, 2, 'เห็ดออรินจิ', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (17, 1, 2, 'กุนเชียง', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
-INSERT INTO `products_options` VALUES (18, 1, 2, 'หมูสับผัดซอส', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (1, 1, 2, 'กุ้ง', NULL, 15, 'kowtomnanan_topping_01.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (2, 1, 2, 'ไข่เยี่ยวม้า', NULL, 15, 'kowtomnanan_topping_07.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (3, 1, 2, 'เบคอน', NULL, 15, 'kowtomnanan_topping_08.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (4, 1, 2, 'ซี่โครงอบชีส', NULL, 15, 'kowtomnanan_topping_09.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (5, 1, 2, 'ตับหมู', NULL, 15, 'kowtomnanan_topping_05.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (6, 1, 2, 'หมูเด้ง', NULL, 15, 'kowtomnanan_topping_02.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (7, 1, 2, 'หมูกรอบ', NULL, 15, 'kowtomnanan_topping_03.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (8, 1, 2, 'ไข่เค็ม', NULL, 15, 'kowtomnanan_topping_11.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (9, 1, 2, 'ไข่ต้ม', NULL, 10, 'kowtomnanan_topping_10.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (10, 1, 2, 'เห็ดหอม', NULL, 10, 'kowtomnanan_topping_13.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (11, 1, 2, 'ปูอัด', NULL, 10, 'kowtomnanan_topping_06.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (12, 1, 2, 'ไก่ฉีก', NULL, 10, NULL, 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (13, 1, 2, 'ไข่ลวก', NULL, 10, 'kowtomnanan_topping_04.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (14, 1, 2, 'หมูยอ', NULL, 10, 'kowtomnanan_topping_12.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (15, 1, 2, 'หมูหยอง', NULL, 10, 'kowtomnanan_topping_15.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (16, 1, 2, 'เห็ดออรินจิ', NULL, 10, 'kowtomnanan_topping_14.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (17, 1, 2, 'กุนเชียง', NULL, 10, 'kowtomnanan_topping_16.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (18, 1, 2, 'หมูสับผัดซอส', NULL, 10, 'kowtomnanan_topping_17.png', 'published', -1, '2025-01-30 23:34:57');
+INSERT INTO `products_options` VALUES (19, 1, 3, 'ถุง', NULL, 0, NULL, 'published', -1, '2025-01-31 18:13:06');
+INSERT INTO `products_options` VALUES (20, 1, 3, 'ถ้วยพลาสติก', NULL, 5, NULL, 'published', -1, '2025-01-31 18:18:54');
+INSERT INTO `products_options` VALUES (21, 1, 3, 'ถ้วยพลาสติก + ช้อนซ่อม', NULL, 10, NULL, 'published', -1, '2025-01-31 18:19:37');
+INSERT INTO `products_options` VALUES (22, 1, 3, 'ถ้วยพลาสติก + ตะเกียบ', NULL, 10, NULL, 'published', -1, '2025-01-31 18:20:12');
+INSERT INTO `products_options` VALUES (23, 1, 3, 'ถ้วยพลาสติก + ช้อน + ตะเกียบ', NULL, 15, NULL, 'published', NULL, '2025-01-31 18:20:58');
 
 -- ----------------------------
 -- Table structure for shippings_methods
@@ -379,7 +384,7 @@ CREATE TABLE `shops`  (
 -- ----------------------------
 -- Records of shops
 -- ----------------------------
-INSERT INTO `shops` VALUES (1, NULL, 'ข้าวต้มหน้าแน่น', NULL, 'published', NULL, NULL, '2025-01-30 23:38:50');
+INSERT INTO `shops` VALUES (1, 'kowtomnanan', 'ข้าวต้มหน้าแน่น', NULL, 'published', 'kowtomnanan_logo.jpg', 'kowtomnanan_cover.jpg', '2025-01-30 23:38:50');
 
 -- ----------------------------
 -- Table structure for shops_branches
