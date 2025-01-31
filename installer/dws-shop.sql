@@ -1,7 +1,7 @@
 /*
- Navicat Premium Data Transfer
+ Navicat Premium Dump SQL
 
- Source Server         : [MariaDB] localhost
+ Source Server         : MariaDB_localhost
  Source Server Type    : MariaDB
  Source Server Version : 110502 (11.5.2-MariaDB-log)
  Source Host           : localhost:3306
@@ -11,7 +11,7 @@
  Target Server Version : 110502 (11.5.2-MariaDB-log)
  File Encoding         : 65001
 
- Date: 31/01/2025 02:28:55
+ Date: 31/01/2025 16:38:30
 */
 
 SET NAMES utf8mb4;
@@ -31,6 +31,8 @@ CREATE TABLE `categories`  (
   `category_status` enum('published','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'published',
   `select_type` enum('sigle','nolimit','limit') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'sigle',
   `select_limit` int(255) NULL DEFAULT 0,
+  `select_require` enum('Y','N') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'Y',
+  `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `shop_id`(`shop_id` ASC) USING BTREE,
   CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -39,9 +41,9 @@ CREATE TABLE `categories`  (
 -- ----------------------------
 -- Records of categories
 -- ----------------------------
-INSERT INTO `categories` VALUES (1, 1, 1, 'จานหลัก', 'product', NULL, 'published', 'sigle', NULL);
-INSERT INTO `categories` VALUES (2, 1, 1, 'ราคาพิเศษ', 'option', NULL, 'published', 'nolimit', NULL);
-INSERT INTO `categories` VALUES (3, 1, 2, 'ราคาทั่วไป', 'option', NULL, 'published', 'nolimit', NULL);
+INSERT INTO `categories` VALUES (1, 1, 1, 'จานหลัก', 'product', NULL, 'published', 'nolimit', NULL, 'Y', '2025-01-31 14:31:23');
+INSERT INTO `categories` VALUES (2, 1, 1, 'ท็อปปิ้ง', 'option', NULL, 'published', 'nolimit', NULL, 'Y', '2025-01-31 14:31:25');
+INSERT INTO `categories` VALUES (3, 1, 2, 'บรรจุภัณฑ์', 'option', NULL, 'published', 'nolimit', NULL, 'Y', '2025-01-31 14:31:27');
 
 -- ----------------------------
 -- Table structure for discounts
@@ -150,8 +152,13 @@ CREATE TABLE `orders`  (
   `product_qty` int(11) NULL DEFAULT 1,
   `is_checkout` enum('N','Y') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N',
   `is_paid` enum('N','Y') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N',
+  `discount_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `price_order` decimal(10, 2) NULL DEFAULT NULL,
+  `price_shipping` decimal(10, 2) NULL DEFAULT NULL,
+  `price_discount` decimal(10, 2) NULL DEFAULT NULL,
+  `price_vat` decimal(10, 2) NULL DEFAULT NULL,
+  `price_final` decimal(10, 2) NULL DEFAULT NULL,
   `create_at` datetime NULL DEFAULT current_timestamp(),
-  `discount` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -167,17 +174,60 @@ CREATE TABLE `orders`  (
 DROP TABLE IF EXISTS `orders_options`;
 CREATE TABLE `orders_options`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NULL DEFAULT NULL,
   `option_id` int(11) NULL DEFAULT NULL,
   `option_qty` int(11) NULL DEFAULT 1,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `option_id`(`option_id` ASC) USING BTREE,
-  CONSTRAINT `orders_options_ibfk_1` FOREIGN KEY (`option_id`) REFERENCES `products_options` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  INDEX `order_id`(`order_id` ASC) USING BTREE,
+  CONSTRAINT `orders_options_ibfk_1` FOREIGN KEY (`option_id`) REFERENCES `products_options` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `orders_options_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of orders_options
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for orders_reviews
+-- ----------------------------
+DROP TABLE IF EXISTS `orders_reviews`;
+CREATE TABLE `orders_reviews`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NULL DEFAULT NULL,
+  `review_comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `review_star` int(11) NULL DEFAULT NULL,
+  `member_id` int(11) NULL DEFAULT NULL,
+  `create_at` datetime NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `order_id`(`order_id` ASC) USING BTREE,
+  INDEX `member_id`(`member_id` ASC) USING BTREE,
+  CONSTRAINT `orders_reviews_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `orders_reviews_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of orders_reviews
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for payment_methods
+-- ----------------------------
+DROP TABLE IF EXISTS `payment_methods`;
+CREATE TABLE `payment_methods`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `method_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `method_icon_class` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `method_icon_img` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `create_at` datetime NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of payment_methods
+-- ----------------------------
+INSERT INTO `payment_methods` VALUES (1, 'QRCode', 'fa-solid fa-qrcode', NULL, '2025-01-31 10:11:44');
 
 -- ----------------------------
 -- Table structure for products
@@ -271,6 +321,24 @@ INSERT INTO `products_options` VALUES (17, 1, 2, 'กุนเชียง', 10,
 INSERT INTO `products_options` VALUES (18, 1, 2, 'หมูสับผัดซอส', 10, NULL, NULL, NULL, '2025-01-30 23:34:57');
 
 -- ----------------------------
+-- Table structure for shippings_methods
+-- ----------------------------
+DROP TABLE IF EXISTS `shippings_methods`;
+CREATE TABLE `shippings_methods`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `method_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `method_icon_class` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `method_icon_img` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `create_at` datetime NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of shippings_methods
+-- ----------------------------
+INSERT INTO `shippings_methods` VALUES (1, 'รถจักรยานยนต์', 'fa-solid fa-moped', 'shipping_method_01', '2025-01-31 09:46:24');
+
+-- ----------------------------
 -- Table structure for shippings_rates
 -- ----------------------------
 DROP TABLE IF EXISTS `shippings_rates`;
@@ -351,5 +419,22 @@ CREATE TABLE `shops_contacts`  (
 -- ----------------------------
 INSERT INTO `shops_contacts` VALUES (1, 1, 'tel', '0999999999', '2025-01-31 00:36:48');
 INSERT INTO `shops_contacts` VALUES (2, 1, 'line', '@12341234', '2025-01-31 00:39:20');
+
+-- ----------------------------
+-- Table structure for shops_favorite
+-- ----------------------------
+DROP TABLE IF EXISTS `shops_favorite`;
+CREATE TABLE `shops_favorite`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `shop_id` int(11) NULL DEFAULT NULL,
+  `member_id` int(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `shop_id`(`shop_id` ASC) USING BTREE,
+  CONSTRAINT `shops_favorite_ibfk_1` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of shops_favorite
+-- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;

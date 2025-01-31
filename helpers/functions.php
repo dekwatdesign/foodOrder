@@ -3,10 +3,10 @@
 // Database configuration function
 function getDatabaseConnections(): array
 {
-    $default_host = $_ENV['WORK_DB_HOST'];
-    $default_user = $_ENV['WORK_DB_USER'];
-    $default_pass = $_ENV['WORK_DB_PASS'];
-    $default_db = $_ENV['WORK_DB_NAME'];
+    $default_host = $_ENV['SHOP_DB_HOST'];
+    $default_user = $_ENV['SHOP_DB_USER'];
+    $default_pass = $_ENV['SHOP_DB_PASS'];
+    $default_db = $_ENV['SHOP_DB_NAME'];
 
     // Work Connection
     $default_connect = new mysqli($default_host, $default_user, $default_pass, $default_db);
@@ -213,6 +213,20 @@ function getCurrentFiscalYear()
     return (int)$currentYear;
 }
 
+function getShops() {
+    global $conn;
+
+    $shops = [];
+
+    $sql = "SELECT * FROM shops ORDER BY create_at DESC";
+    $query = $conn->query($sql);
+    while ($row = $query->fetch_assoc()) {
+        $shops[] = $row;
+    }
+
+    return $shops;
+}
+
 function getShopInfo($shop_ref) {
     global $conn;
 
@@ -298,4 +312,16 @@ function getShopProducts($shop_ref, $cat_ref) {
         }
     }
     return $products;
+}
+
+function getProductOptions($product_id) {
+    global $conn;
+    $options = [];
+    $sql = "";
+}
+
+// ผ่านการเช็ค session แล้ว
+function addToCart($sess_id, $shop_id, $prod_id, $opt_arr = []) {
+    global $conn;
+    
 }

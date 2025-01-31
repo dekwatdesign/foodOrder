@@ -1,4 +1,4 @@
 <?php
 
 $connects = getDatabaseConnections();
-$connect = $connects['default'];
+$conn = $connects['default'];

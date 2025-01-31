@@ -1,26 +1,21 @@
 <?php
 
 // Params
-define('_WEBROOT_PATH_', '../../');
+define('_WEBROOT_PATH_', '../');
 define('_LOG_NAME_', 'access');
 
-if (!isset($_GET['shop'])) {
-	header('Location: ' . _WEBROOT_PATH_);
-	exit(0);
-}
+// if (!isset($_GET['shop'])) {
+// 	header('Location: ' . _WEBROOT_PATH_);
+// 	exit(0);
+// }
 
 // Setup
 require _WEBROOT_PATH_ . 'components/setup.php';
 require _WEBROOT_PATH_ . 'components/verify.php';
 
 // Logger
-$logger->info('View Index', ["page" => "index"]);
+$logger->info('View Seller', ["page" => "seller"]);
 $conn = getDatabaseConnections()['default'];
-$shop_ref = $_GET['shop'];
-$cat_ref = isset($_GET['cat']) ? $_GET['cat'] : 0;
-$shop = getShopInfo($shop_ref);
-$shop_cat = getShopCategory($shop_ref);
-$products = getShopProducts($shop_ref, $cat_ref);
 ?>
 
 <!DOCTYPE html>
@@ -44,21 +39,13 @@ $products = getShopProducts($shop_ref, $cat_ref);
 		<div class="card shadow-sm">
 			<div class="card-header min-h-50px">
 				<div class="card-title fw-bold">
-					<?php echo $shop['shop_title'] ?>
+					
 				</div>
 				<div class="card-toolbar">
-					<a href="" class="text-gray-600">
-						<i class="fa-light fa-heart fs-2"></i>
-					</a>
+					
 				</div>
 			</div>
 			<div class="card-body d-flex flex-column gap-2">
-
-				<?php if (isset($_GET['action']) && $_GET['action'] == 'addcart') : ?>
-					<?php require './pages/options.php' ?>
-				<?php else: ?>
-					<?php require './pages/products.php' ?>
-				<?php endif; ?>
 
 			</div>
 		</div>
