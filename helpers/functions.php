@@ -213,7 +213,8 @@ function getCurrentFiscalYear()
     return (int)$currentYear;
 }
 
-function getShops() {
+function getShops()
+{
     global $conn;
 
     $shops = [];
@@ -227,11 +228,12 @@ function getShops() {
     return $shops;
 }
 
-function getShopInfo($shop_ref) {
+function getShopInfo($shop_ref)
+{
     global $conn;
 
     $shop_info = [];
-    
+
     $sql = "SELECT
                 sh.id,
                 sh.shop_username,
@@ -256,11 +258,12 @@ function getShopInfo($shop_ref) {
     return $shop_info;
 }
 
-function getShopCategory($shop_ref) {
+function getShopCategory($shop_ref)
+{
     global $conn;
 
     $cat_info = [];
-    
+
     $sql = "SELECT
                 cat.id,
                 cat.category_name AS `name`
@@ -283,7 +286,8 @@ function getShopCategory($shop_ref) {
     return $cat_info;
 }
 
-function getShopProducts($shop_ref, $cat_ref) {
+function getShopProducts($shop_ref, $cat_ref)
+{
     global $conn;
     $products = [];
     $sql = "SELECT
@@ -291,7 +295,6 @@ function getShopProducts($shop_ref, $cat_ref) {
                 cat.category_name AS cat_name,
                 pd.id AS prod_id,
                 pd.product_title,
-                pd.product_img,
                 pd.product_description,
                 pd.product_price,
                 img.file_key AS img_name,
@@ -302,8 +305,9 @@ function getShopProducts($shop_ref, $cat_ref) {
                 LEFT JOIN products_images AS img ON pd.id = img.product_id 
             WHERE
                 cat.shop_id = '$shop_ref' 
-                AND pd.product_status = 'published' ";
-    $sql .= $cat_ref==0 ? "":" AND cat.id = '$cat_ref' ";
+                AND pd.product_status = 'published' 
+                AND img.file_sort = 1 ";
+    $sql .= $cat_ref == 0 ? "" : " AND cat.id = '$cat_ref' ";
     $query = $conn->query($sql);
     if ($query->num_rows > 0) {
         while ($row = $query->fetch_assoc()) {
@@ -314,14 +318,75 @@ function getShopProducts($shop_ref, $cat_ref) {
     return $products;
 }
 
-function getProductOptions($product_id) {
+function getProductInfo($product_id)
+{
+    global $conn;
+    $info = [];
+    $sql = "SELECT
+                pd.id AS pd_id,
+                pd.product_title,
+                pd.product_description,
+                pd.product_status,
+                pd.product_price,
+                img.file_extension AS img_ext,
+                img.file_key AS img_name
+            FROM
+                products AS pd
+                INNER JOIN products_images AS img ON pd.id = img.product_id 
+            WHERE
+                pd.id = '$product_id' 
+                AND img.file_sort = 1";
+    $query = $conn->query($sql);
+    while ($row = $query->fetch_assoc()) {
+        $info = $row;
+    }
+    return $info;
+}
+
+function getProductOptions($product_id)
+{
     global $conn;
     $options = [];
-    $sql = "";
+    $sql = "SELECT
+                op.id AS op_id,
+                op.product_id,
+                op.category_id,
+                op.option_title,
+                op.option_description,
+                op.option_price,
+                op.option_img,
+                op.option_qty,
+                cat.id AS cat_id,
+                cat.category_sort,
+                cat.category_name,
+                cat.category_description,
+                cat.select_min,
+                cat.select_max 
+            FROM
+                products_options AS op
+                INNER JOIN categories AS cat ON op.category_id = cat.id 
+            WHERE
+                ( op.product_id = '$product_id' AND op.option_status = 'published' ) 
+                AND ( cat.category_type = 'option' AND cat.category_status = 'published' ) 
+            ORDER BY
+                cat.category_sort ASC,
+                op.create_at ASC";
+    $query = $conn->query($sql);
+    while ($row = $query->fetch_assoc()) {
+        $options[$row['cat_id']]['category'] = [
+            'name' => $row['category_name'],
+            'description' => $row['category_description'],
+            'min' => $row['select_min'],
+            'max' => $row['select_max'],
+        ];
+        $options[$row['cat_id']]['options'][] = $row;
+    }
+
+    return $options;
 }
 
 // ผ่านการเช็ค session แล้ว
-function addToCart($sess_id, $shop_id, $prod_id, $opt_arr = []) {
+function addToCart($sess_id, $shop_id, $prod_id, $opt_arr = [])
+{
     global $conn;
-    
 }

@@ -21,6 +21,15 @@ $cat_ref = isset($_GET['cat']) ? $_GET['cat'] : 0;
 $shop = getShopInfo($shop_ref);
 $shop_cat = getShopCategory($shop_ref);
 $products = getShopProducts($shop_ref, $cat_ref);
+
+$img_blank = _WEBROOT_PATH_ . 'assets/medias/svg/blank-image.svg';
+
+$shop_logo_path = _WEBROOT_PATH_ . 'files/shops/logos/' . $shop['shop_image_logo'];
+$shop_logo = file_exists($shop_logo_path) ? $shop_logo_path : $img_blank;
+
+$shop_cover_path = _WEBROOT_PATH_ . 'files/shops/covers/' . $shop['shop_image_cover'];
+$shop_cover = file_exists($shop_cover_path) ? $shop_cover_path : $img_blank;
+
 ?>
 
 <!DOCTYPE html>
@@ -42,9 +51,20 @@ $products = getShopProducts($shop_ref, $cat_ref);
 
 	<div class="container flex-column-fluid px-md-0 px-4">
 		<div class="card shadow-sm">
+			<img src="<?php echo $shop_cover ?>" class="card-img-top object-fit-cover h-xl-500px h-lg-400px h-md-300px h-200px" alt="...">
 			<div class="card-header min-h-50px">
 				<div class="card-title fw-bold">
-					<?php echo $shop['shop_title'] ?>
+					<div class="d-flex flex-row align-items-end gap-4">
+						<div class="bg-body rounded-3 p-3 mt-n20 shadow-sm">
+							<div class="symbol symbol-70px">
+								<img src="<?php echo $shop_logo ?>" alt="" />
+							</div>
+						</div>
+						<spa class="fs-2">
+							<?php echo $shop['shop_title'] ?>
+						</span>
+					</div>
+
 				</div>
 				<div class="card-toolbar">
 					<a href="" class="text-gray-600">

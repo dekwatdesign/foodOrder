@@ -35,14 +35,18 @@ $shops = getShops();
 			<div class="card-body">
 				<div class="row g-4">
 
-					<?php foreach ($shops as $si => $sv) : ?>
+					<?php foreach ($shops as $si => $sv) : 
+						$img_shop_blank = _WEBROOT_PATH_.'assets/medias/svg/blank-image.svg';
+						$img_shop_path = _WEBROOT_PATH_.'files/shops/logos/'.$sv['shop_image_logo'];
+						$img_shop = file_exists($img_shop_path) ? $img_shop_path : $img_shop_blank;
+						?>
 						<div class="col-lg-3 col-md-6 col-12">
 							<a href="<?php echo _WEBROOT_PATH_ ?>order/line/?shop=<?php echo $sv['id'] ?>" class="card">
 								<div class="card-body p-4">
 									<div class="d-flex flex-md-column flex-row align-items-md-center align-items-start gap-3">
 										<div>
 											<div class="symbol symbol-70px image-input-placeholder border border-secondary">
-												<img src="<?php echo _WEBROOT_PATH_ ?>assets/medias/svg/blank-image.svg" alt="Shop" />
+												<img src="<?php echo $img_shop ?>" alt="Shop" />
 											</div>
 										</div>
 										<div class="d-flex flex-column gap-1">
