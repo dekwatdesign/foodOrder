@@ -41,7 +41,7 @@ $shops = getShops();
 						$img_shop = file_exists($img_shop_path) ? $img_shop_path : $img_shop_blank;
 						?>
 						<div class="col-lg-3 col-md-6 col-12">
-							<a href="<?php echo _WEBROOT_PATH_ ?>order/line/?shop=<?php echo $sv['id'] ?>" class="card">
+							<a href="<?php echo _WEBROOT_PATH_ ?>order/web/?shop=<?php echo $sv['id'] ?>" class="card">
 								<div class="card-body p-4">
 									<div class="d-flex flex-md-column flex-row align-items-md-center align-items-start gap-3">
 										<div>

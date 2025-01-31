@@ -4,6 +4,13 @@
 define('_WEBROOT_PATH_', '../../');
 define('_LOG_NAME_', 'access');
 
+if (isset($_GET['action']) && $_GET['action'] == 'addcart') :
+	if (!isset($_SESSION['session_key'])) :
+		header('Location: ' . _WEBROOT_PATH_.'login.php');
+		exit(0);
+	endif;
+endif;
+
 if (!isset($_GET['shop'])) {
 	header('Location: ' . _WEBROOT_PATH_);
 	exit(0);
@@ -74,11 +81,13 @@ $shop_cover = file_exists($shop_cover_path) ? $shop_cover_path : $img_blank;
 			</div>
 			<div class="card-body d-flex flex-column gap-2">
 
-				<?php if (isset($_GET['action']) && $_GET['action'] == 'addcart') : ?>
-					<?php require './pages/options.php' ?>
-				<?php else: ?>
-					<?php require './pages/products.php' ?>
-				<?php endif; ?>
+				<?php
+				if (isset($_GET['action']) && $_GET['action'] == 'addcart') :
+					require './pages/options.php';
+				else:
+					require './pages/products.php';
+				endif;
+				?>
 
 			</div>
 		</div>
@@ -87,53 +96,6 @@ $shop_cover = file_exists($shop_cover_path) ? $shop_cover_path : $img_blank;
 	<?php require _WEBROOT_PATH_ . 'components/footer.php'; ?>
 
 	<script src="./js/custom.js"></script>
-
-	<script>
-		function sendOrder() {
-			// var options = [];
-			// $(`input[name^="options"]:checked`).each(function() {
-			// 	var index = this.name.match(/\[([0-9]+)\]/)[1];
-			// 		options[index] = [];
-			// 		options[index].push($(this).val());
-			// });
-
-			var requiredOptions = $(`input[name^="options"][data-required="true"]`);
-			var allRequiredSelected = true;
-
-			requiredOptions.each(function() {
-				var index = this.name.match(/\[([0-9]+)\]/)[1];
-				console.log($(`input[name="options[${index}]"]:checked`).length);
-				
-				if (!$(`input[name="options[${index}]"]:checked`).length) {
-					allRequiredSelected = false;
-					alert('Please select all required options.');
-					return false;
-				}
-			});
-
-			if (allRequiredSelected) {
-				// Proceed with sending the order
-				// $.ajax({
-				// 	url: './order.php',
-				// 	type: 'POST',
-				// 	data: {
-				// 		options: options
-				// 	},
-				// 	success: function(response) {
-				// 		alert('Order sent successfully!');
-				// 	},
-				// 	error: function() {
-				// 		alert('Failed to send order.');
-				// 	}
-				// });
-			}
-			
-
-
-
-
-		}
-	</script>
 
 </body>
 <!--end::Body-->
