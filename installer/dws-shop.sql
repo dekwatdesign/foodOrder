@@ -11,11 +11,46 @@
  Target Server Version : 110502 (11.5.2-MariaDB-log)
  File Encoding         : 65001
 
- Date: 31/01/2025 22:09:25
+ Date: 03/02/2025 08:16:32
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for bills
+-- ----------------------------
+DROP TABLE IF EXISTS `bills`;
+CREATE TABLE `bills`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `shop_id` int(11) NULL DEFAULT NULL,
+  `bill_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `bill_status` enum('open','close','delete') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'open',
+  `bill_price` decimal(10, 2) NULL DEFAULT NULL,
+  `member_id` int(11) NULL DEFAULT NULL,
+  `members_contact_id` int(11) NULL DEFAULT NULL,
+  `payment_method_id` int(11) NULL DEFAULT NULL,
+  `discount_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `price_order` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `price_shipping` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `price_discount` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `price_vat` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `price_final` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `create_at` datetime NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `shop_id`(`shop_id` ASC) USING BTREE,
+  INDEX `member_id`(`member_id` ASC) USING BTREE,
+  INDEX `members_contact_id`(`members_contact_id` ASC) USING BTREE,
+  INDEX `payment_method_id`(`payment_method_id` ASC) USING BTREE,
+  CONSTRAINT `bills_ibfk_1` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `bills_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `bills_ibfk_3` FOREIGN KEY (`members_contact_id`) REFERENCES `members_contacts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `bills_ibfk_4` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of bills
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for categories
@@ -73,14 +108,18 @@ CREATE TABLE `discounts`  (
 DROP TABLE IF EXISTS `members`;
 CREATE TABLE `members`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `display_name_auth_method` enum('email','gmail','line','messenger') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'email',
   `display_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `avatar_auth_method` enum('email','gmail','line','messenger') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'email',
+  `avatar_img` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of members
 -- ----------------------------
+INSERT INTO `members` VALUES (1, 'line', NULL, 'line', NULL, '2025-02-01 22:45:52');
 
 -- ----------------------------
 -- Table structure for members_contacts
@@ -108,17 +147,19 @@ DROP TABLE IF EXISTS `members_keys`;
 CREATE TABLE `members_keys`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `member_id` int(11) NULL DEFAULT NULL,
-  `key_type` enum('line','messenger') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'line',
-  `key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `auth_method` enum('email','gmail','line','messenger') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'email',
+  `auth_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `key_hashed` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `member_id`(`member_id` ASC) USING BTREE,
   CONSTRAINT `members_keys_ibfk_1` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of members_keys
 -- ----------------------------
+INSERT INTO `members_keys` VALUES (1, 1, 'line', 'U6947241d65275f020b47dcf5c347aa73', NULL, '2025-02-01 22:45:52');
 
 -- ----------------------------
 -- Table structure for members_sessions
@@ -141,51 +182,46 @@ CREATE TABLE `members_sessions`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for orders
+-- Table structure for orders_products
 -- ----------------------------
-DROP TABLE IF EXISTS `orders`;
-CREATE TABLE `orders`  (
+DROP TABLE IF EXISTS `orders_products`;
+CREATE TABLE `orders_products`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `member_id` int(11) NULL DEFAULT NULL,
+  `bill_id` int(11) NULL DEFAULT NULL,
   `product_id` int(11) NULL DEFAULT NULL,
   `product_qty` int(11) NULL DEFAULT 1,
-  `is_checkout` enum('N','Y') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N',
-  `is_paid` enum('N','Y') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'N',
-  `discount_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `price_order` decimal(10, 2) NULL DEFAULT NULL,
-  `price_shipping` decimal(10, 2) NULL DEFAULT NULL,
-  `price_discount` decimal(10, 2) NULL DEFAULT NULL,
-  `price_vat` decimal(10, 2) NULL DEFAULT NULL,
-  `price_final` decimal(10, 2) NULL DEFAULT NULL,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
-  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  INDEX `bill_id`(`bill_id` ASC) USING BTREE,
+  CONSTRAINT `orders_products_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `orders_products_ibfk_2` FOREIGN KEY (`bill_id`) REFERENCES `bills` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of orders
+-- Records of orders_products
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for orders_options
+-- Table structure for orders_products_options
 -- ----------------------------
-DROP TABLE IF EXISTS `orders_options`;
-CREATE TABLE `orders_options`  (
+DROP TABLE IF EXISTS `orders_products_options`;
+CREATE TABLE `orders_products_options`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` int(11) NULL DEFAULT NULL,
+  `category_id` int(11) NULL DEFAULT NULL,
   `option_id` int(11) NULL DEFAULT NULL,
   `option_qty` int(11) NULL DEFAULT 1,
   `create_at` datetime NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `option_id`(`option_id` ASC) USING BTREE,
   INDEX `order_id`(`order_id` ASC) USING BTREE,
-  CONSTRAINT `orders_options_ibfk_1` FOREIGN KEY (`option_id`) REFERENCES `products_options` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `orders_options_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  CONSTRAINT `orders_products_options_ibfk_1` FOREIGN KEY (`option_id`) REFERENCES `products_options` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `orders_products_options_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders_products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of orders_options
+-- Records of orders_products_options
 -- ----------------------------
 
 -- ----------------------------
@@ -202,7 +238,7 @@ CREATE TABLE `orders_reviews`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `order_id`(`order_id` ASC) USING BTREE,
   INDEX `member_id`(`member_id` ASC) USING BTREE,
-  CONSTRAINT `orders_reviews_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `orders_reviews_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders_products` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `orders_reviews_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
