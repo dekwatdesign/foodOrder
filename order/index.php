@@ -1,13 +1,33 @@
 <?php
 
 // Params
-define('_WEBROOT_PATH_', '../../');
+define('_WEBROOT_PATH_', '../');
 define('_LOG_NAME_', 'access');
 
-if (isset($_GET['action']) && $_GET['action'] == 'addcart') :
-	if (!isset($_SESSION['session_key'])) :
-		header('Location: ' . _WEBROOT_PATH_.'login.php');
+// Setup
+require _WEBROOT_PATH_ . 'components/setup.php';
+require _WEBROOT_PATH_ . 'components/verify.php';
+
+// Require Verify
+if (isset($_GET['action']) && in_array($_GET['action'], ['addcart'])) :
+	if (!isset($_SESSION['auth_key']) || (!isset($_SESSION['auth_method']) && !in_array($_SESSION['auth_method'], ['email', 'line', 'messenger']))) :
+
+		$href = '';
+
+		switch ($_GET['platform']) {
+			case 'line':
+				$href = '..';
+				break;
+			case 'messenger':
+				$href = '..';
+				break;
+			default:
+				$href = 'login.php';
+		}
+
+		header('Location: ' . _WEBROOT_PATH_ . $href);
 		exit(0);
+
 	endif;
 endif;
 
@@ -15,10 +35,6 @@ if (!isset($_GET['shop'])) {
 	header('Location: ' . _WEBROOT_PATH_);
 	exit(0);
 }
-
-// Setup
-require _WEBROOT_PATH_ . 'components/setup.php';
-require _WEBROOT_PATH_ . 'components/verify.php';
 
 // Logger
 $logger->info('View Index', ["page" => "index"]);
@@ -45,7 +61,7 @@ $shop_cover = file_exists($shop_cover_path) ? $shop_cover_path : $img_blank;
 <head>
 	<?php require _WEBROOT_PATH_ . 'components/head.php'; ?>
 	<?php require _WEBROOT_PATH_ . 'components/script.php'; ?>
-	<script src="./assets/plugins/custom/datatables/datatables.bundle.js"></script>
+	<script src="<?php echo _WEBROOT_PATH_ ?>assets/plugins/custom/datatables/datatables.bundle.js"></script>
 </head>
 
 <body>
@@ -94,8 +110,32 @@ $shop_cover = file_exists($shop_cover_path) ? $shop_cover_path : $img_blank;
 	</div>
 
 	<?php require _WEBROOT_PATH_ . 'components/footer.php'; ?>
+	<script>
+		var webroot = '<?php echo _WEBROOT_PATH_ ?>';
+	</script>
+	<script src="<?php echo _WEBROOT_PATH_ ?>js/custom.js"></script>
 
-	<script src="./js/custom.js"></script>
+	<script>
+		var cartInfo = function() {
+
+			var cartList = () => {
+				console.log('init');
+				
+			}
+
+		return {
+				init: function() {
+					cartList();
+				}
+			}
+
+		}();
+
+		// On document ready
+		KTUtil.onDOMContentLoaded(function() {
+			cartInfo.init();
+		});
+	</script>
 
 </body>
 <!--end::Body-->

@@ -18,6 +18,120 @@ function getDatabaseConnections(): array
     ];
 }
 
+function checkExistsKey($auth_method, $auth_key, $params = [])
+{
+    global $conn;
+    $sql = "SELECT * FROM members_keys WHERE auth_method='$auth_method' AND auth_key = '{$auth_key}' ";
+    $query = $conn->query($sql);
+
+    // New Insert
+    if ($query->num_rows === 0):
+        $new_mb_vals = [
+            'display_name_auth_method' => $auth_method,
+            'display_name' => strlen($params['display_name']) > 0 ? addslashes($params['display_name']) : null,
+            'avatar_auth_method' => $auth_method,
+            'avatar_img' => strlen($params['avatar_img']) > 0 ? $params['avatar_img'] : null,
+        ];
+        $new_mb_sql = arrayToInsertSQL('members', $new_mb_vals);
+        if ($conn->query($new_mb_sql) === TRUE):
+            $last_id = $conn->insert_id;
+            $new_key_vals = [
+                'member_id' => $last_id,
+                'auth_method' => $auth_method,
+                'auth_key' => $auth_key,
+                'key_hashed' => strlen($params['key_hashed']) > 0 ? $params['key_hashed'] : null,
+            ];
+            $new_key_sql = arrayToInsertSQL('members_keys', $new_key_vals);
+            $conn->query($new_key_sql);
+        endif;
+    endif;
+}
+
+function getPublishProfile($auth_key, $auth_method = 'email')
+{
+    // $profile = [];
+    // switch ($auth_method) {
+    //     case 'line':
+    //         $profile = getLineProfileWithUserID($auth_key);
+    //         break;
+    //     default:
+    //         $profile = getDefaultProfile($auth_key);
+    //         break;
+    // }
+
+    // return $profile;
+    return [
+        'display_name' => $_SESSION['display_name'],
+        'avatar_img' => $_SESSION['avatar_img'],
+    ];
+}
+
+function getDefaultProfile($auth_key)
+{
+    return [];
+}
+
+function getLineProfileWithUserID($user_id)
+{
+
+    return [
+        'display_name' => $_SESSION['display_name'],
+        'avatar_img' => $_SESSION['avatar_img'],
+    ];
+}
+
+// สร้าง CSRF Token
+function generate_csrf_token()
+{
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// ตรวจสอบ CSRF Token
+function verify_csrf_token($token)
+{
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// ป้องกัน Brute Force (ล็อกบัญชีชั่วคราว)
+function check_login_attempts($pdo, $ip)
+{
+    $stmt = $pdo->prepare("SELECT attempts, last_attempt FROM login_attempts WHERE ip = ?");
+    $stmt->execute([$ip]);
+    $row = $stmt->fetch();
+
+    if ($row) {
+        if ($row['attempts'] >= 5 && time() - strtotime($row['last_attempt']) < 900) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// บันทึกการพยายามล็อกอิน
+function record_login_attempt($pdo, $ip, $success)
+{
+    if ($success) {
+        $stmt = $pdo->prepare("DELETE FROM login_attempts WHERE ip = ?");
+        $stmt->execute([$ip]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO login_attempts (ip, attempts, last_attempt) 
+            VALUES (?, 1, NOW()) ON DUPLICATE KEY UPDATE attempts = attempts + 1, last_attempt = NOW()");
+        $stmt->execute([$ip]);
+    }
+}
+
+function lineLoginURL()
+{
+    return "https://access.line.me/oauth2/v2.1/authorize?response_type=code" .
+        "&client_id=" . $_ENV['LINE_CHANNEL_ID'] .
+        "&redirect_uri=" . urlencode($_ENV['LINE_CALLBACK_URL']) .
+        "&scope=profile%20openid%20email" .
+        "&state=" . bin2hex(random_bytes(16));
+}
+
 function convertDateToWeekdayArr($date): array
 {
     $weekdays = [
@@ -134,6 +248,33 @@ function arrayToInsertSQL($tableName, $data)
     return $sql;
 }
 
+function arrayToInsertSQLMultiRows($tableName, $data_arr)
+{
+    // สร้างรายการคอลัมน์และค่าจาก Array
+    $columns = implode(", ", array_keys($data_arr[0]));
+    // สร้าง placeholders และตรวจสอบค่า null
+    $placeholders_all = [];
+
+    foreach ($data_arr as $dkey => $value_arr) {
+        $placeholders = [];
+        foreach ($value_arr as $vkey => $value) {
+            if ($value === null) {
+                $placeholders[] = " 'NULL' ";
+            } else {
+                $placeholders[] = " '$value' ";
+            }
+        }
+        $placeholders_all[] = "(" . implode(", ", $placeholders) . ")";
+    }
+
+    $values_sql = implode(", ", $placeholders_all);
+
+    // สร้างคำสั่ง SQL
+    $sql = "INSERT INTO $tableName ($columns) VALUES $values_sql;";
+
+    return $sql;
+}
+
 
 function arrayToUpdateSQL($tableName, $data, $where)
 {
@@ -201,8 +342,8 @@ function clearAllCookies()
 function getCurrentFiscalYear()
 {
     // รับค่าเดือนและปีปัจจุบัน
-    $currentMonth = (int)date('m'); // เดือน (01-12)
-    $currentYear = (int)date('Y');  // ปีปัจจุบัน
+    $currentMonth = (int) date('m'); // เดือน (01-12)
+    $currentYear = (int) date('Y');  // ปีปัจจุบัน
 
     // หากเดือนปัจจุบันน้อยกว่า 10 (ก่อนตุลาคม) ปีงบประมาณจะเป็นปีปัจจุบัน - 1
     if ($currentMonth > 10) {
@@ -210,7 +351,7 @@ function getCurrentFiscalYear()
     }
 
     // หากเป็นเดือนตุลาคมถึงธันวาคม ปีงบประมาณจะเป็นปีปัจจุบัน
-    return (int)$currentYear;
+    return (int) $currentYear;
 }
 
 function getShops()
@@ -389,4 +530,128 @@ function getProductOptions($product_id)
 function addToCart($sess_id, $shop_id, $prod_id, $opt_arr = [])
 {
     global $conn;
+}
+
+function getNewBillCode($shop_id)
+{
+    global $conn;
+
+    // Get the latest bill code for the shop
+    $sql = "SELECT bill_code FROM bills WHERE shop_id = '$shop_id' ORDER BY create_at DESC LIMIT 1";
+    $query = $conn->query($sql);
+    $latest_bill_code = $query->num_rows > 0 ? $query->fetch_assoc()['bill_code'] : null;
+
+    // Generate new bill code
+    if ($latest_bill_code) {
+        $number = (int) substr($latest_bill_code, -6) + 1;
+        $new_bill_code = 'B' . str_pad($number, 6, '0', STR_PAD_LEFT);
+    } else {
+        $new_bill_code = 'B000001';
+    }
+
+    return $new_bill_code;
+}
+
+function getMemberIDWithAuthKey($auth_key)
+{
+    global $conn;
+    $member_id = null;
+
+    $sql = "SELECT member_id FROM members_keys WHERE auth_key = '$auth_key'";
+    $query = $conn->query($sql);
+    if ($query->num_rows > 0) {
+        $row = $query->fetch_assoc();
+        $member_id = $row['member_id'];
+    }
+
+    return $member_id;
+}
+
+function getNewID($tableName)
+{
+    global $conn;
+
+    $sql = "SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$tableName'";
+    $query = $conn->query($sql);
+    $autoIncrement = null;
+
+    if ($query->num_rows > 0) {
+        $row = $query->fetch_assoc();
+        $autoIncrement = $row['AUTO_INCREMENT'];
+    }
+
+    return $autoIncrement;
+}
+
+function getOrderIDWithBillID($billID)
+{
+    global $conn;
+    $order_id = null;
+
+    $sql = "SELECT id FROM orders_products WHERE bill_id = '$billID'";
+    $query = $conn->query($sql);
+    if ($query->num_rows > 0) {
+        $row = $query->fetch_assoc();
+        $order_id = $row['id'];
+    }
+
+    return $order_id;
+}
+
+function checkExistsOrderOptions($billID, $product_id, $cats_options)
+{
+    global $conn;
+    $result = [];
+    $sql = "SELECT id FROM orders_products WHERE bill_id = '$billID' AND product_id='$product_id' ";
+    $query = $conn->query($sql);
+    if ($query->num_rows > 0):
+        while ($row = $query->fetch_assoc()):
+            $order_id = $row['id'];
+            $exists_arr = [];
+
+            $opts_count_sql = "SELECT 
+                                    * 
+                                FROM 
+                                    orders_products_options 
+                                WHERE 
+                                    order_id='$order_id' ";
+            $opts_count_query = $conn->query($opts_count_sql);
+            $opts_count = $opts_count_query->num_rows;
+
+            foreach ($cats_options as $cate_id => $opt_arr):
+                foreach ($opt_arr as $opt_k => $opt_v):
+                    $option_id = $opt_v['option_id'];
+                    $opts_sql = "SELECT 
+                                        * 
+                                    FROM 
+                                        orders_products_options 
+                                    WHERE 
+                                        order_id='$order_id' 
+                                        AND category_id='$cate_id' 
+                                        AND option_id='$option_id' ";
+                    $opts_query = $conn->query($opts_sql);
+                    if ($opts_query->num_rows > 0):
+                        $exists_arr[] = 'true';
+                    else:
+                        $exists_arr[] = 'false';
+                    endif;
+                endforeach;
+            endforeach;
+
+            if ($opts_count != count($exists_arr)) :
+                $exists_arr[] = 'false';
+            endif;
+
+            if (!in_array('false', $exists_arr)):
+                $result['id'][] = $order_id;
+                $result['status'][] = 'true';
+            else:
+                $result['status'][] = 'false';
+            endif;
+        endwhile;
+    else:
+        $result['status'][] = 'false';
+    endif;
+
+    return $result;
 }

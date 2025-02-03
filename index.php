@@ -11,6 +11,7 @@ require _WEBROOT_PATH_ . 'components/verify.php';
 $logger->info('View Index', ["page" => "index"]);
 
 $shops = getShops();
+
 ?>
 
 <!DOCTYPE html>
@@ -21,8 +22,6 @@ $shops = getShops();
 	<?php require _WEBROOT_PATH_ . 'components/script.php'; ?>
 	<script src="<?php echo _WEBROOT_PATH_ ?>assets/plugins/custom/datatables/datatables.bundle.js"></script>
 </head>
-
-<body>
 	<!--begin::Theme mode setup on page load-->
 	<script>
 		document.documentElement.setAttribute("data-bs-theme", "light");
@@ -35,13 +34,13 @@ $shops = getShops();
 			<div class="card-body">
 				<div class="row g-4">
 
-					<?php foreach ($shops as $si => $sv) : 
-						$img_shop_blank = _WEBROOT_PATH_.'assets/medias/svg/blank-image.svg';
-						$img_shop_path = _WEBROOT_PATH_.'files/shops/logos/'.$sv['shop_image_logo'];
+					<?php foreach ($shops as $si => $sv) :
+						$img_shop_blank = _WEBROOT_PATH_ . 'assets/medias/svg/blank-image.svg';
+						$img_shop_path = _WEBROOT_PATH_ . 'files/shops/logos/' . $sv['shop_image_logo'];
 						$img_shop = file_exists($img_shop_path) ? $img_shop_path : $img_shop_blank;
-						?>
+					?>
 						<div class="col-lg-3 col-md-6 col-12">
-							<a href="<?php echo _WEBROOT_PATH_ ?>order/web/?shop=<?php echo $sv['id'] ?>" class="card">
+							<a href="<?php echo _WEBROOT_PATH_ ?>order/?shop=<?php echo $sv['id'] ?>" class="card">
 								<div class="card-body p-4">
 									<div class="d-flex flex-md-column flex-row align-items-md-center align-items-start gap-3">
 										<div>
@@ -82,9 +81,12 @@ $shops = getShops();
 
 	<?php require _WEBROOT_PATH_ . 'components/footer.php'; ?>
 
-	<script src="./js/custom.js"></script>
+	<script>
+		var webroot = '<?php echo _WEBROOT_PATH_ ?>';
+	</script>
+	<script src="<?php echo _WEBROOT_PATH_ ?>js/custom.js"></script>
 
-</body>
-<!--end::Body-->
+	</body>
+	<!--end::Body-->
 
 </html>

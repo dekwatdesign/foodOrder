@@ -10,6 +10,8 @@ require _WEBROOT_PATH_ . 'components/verify.php';
 // Logger
 $logger->info('View Login', ["page" => "login"]);
 
+$csrf_token = generate_csrf_token();
+
 ?>
 
 <!DOCTYPE html>
@@ -32,6 +34,7 @@ $logger->info('View Login', ["page" => "login"]);
                 <img class="h-100px object-fit-contain" src="<?php echo _WEBROOT_PATH_ ?>assets/medias/logos/android-chrome-192x192.png" alt="">
                 <h2 class="text-center">เข้าสู่ระบบ</h2>
                 <form id="loginForm" method="POST" class="d-flex flex-column gap-4">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                     <div class="form-floating">
                         <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" />
                         <label for="floatingInput">อีเมล์ / Email</label>
@@ -62,7 +65,7 @@ $logger->info('View Login', ["page" => "login"]);
                     <a href="" class="btn btn-icon btn-facebook rounded-circle" id="facebookLogin">
                         <i class="fa-brands fa-facebook fs-2"></i>
                     </a>
-                    <a href="" class="btn btn-icon btn-success rounded-circle" id="lineLogin">
+                    <a href="<?php echo lineLoginURL() ?>" class="btn btn-icon btn-success rounded-circle" id="lineLogin">
                         <i class="fa-brands fa-line fs-2"></i>
                     </a>
                 </div>
@@ -85,22 +88,7 @@ $logger->info('View Login', ["page" => "login"]);
             }
             this.submit();
         });
-        $(document).ready(function() {
-            $('#googleLogin').click(function() {
-                // Google login logic here
-                window.location.href = 'https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=email%20profile&state=YOUR_STATE';
-            });
-
-            $('#facebookLogin').click(function() {
-                // Facebook login logic here
-                window.location.href = 'https://www.facebook.com/v10.0/dialog/oauth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&state=YOUR_STATE&scope=email,public_profile';
-            });
-
-            $('#lineLogin').click(function() {
-                // Line login logic here
-                window.location.href = 'https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&state=YOUR_STATE&scope=profile%20openid%20email';
-            });
-        });
+        
     </script>
 
 </body>

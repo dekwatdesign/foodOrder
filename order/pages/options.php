@@ -33,8 +33,6 @@ $product_img = file_exists($product_img_path) ? $product_img_path : $img_blank;
     </div>
 </div>
 
-
-
 <?php
 
 foreach ($options as $cati => $catv) :
@@ -51,7 +49,7 @@ foreach ($options as $cati => $catv) :
         endif;
     endif;
 ?>
-    <span data-category="<?php echo $cati ?>" data-required="<?php echo $inp_require=='required' ? 'true':'false' ?>" class="d-flex flex-row w-100 bg-light rounded-2 p-4 fw-bold"><?php echo $catinf['name'] ?></span>
+    <span data-category="<?php echo $cati ?>" data-required="<?php echo $inp_require == 'required' ? 'true' : 'false' ?>" class="d-flex flex-row w-100 bg-light rounded-2 p-4 fw-bold"><?php echo $catinf['name'] ?></span>
     <span class="ms-2 text-gray-500"><?php echo $catinf['description'] ?></span>
     <div class="row g-4">
 
@@ -59,9 +57,6 @@ foreach ($options as $cati => $catv) :
             $op_img_blank = _WEBROOT_PATH_ . 'assets/medias/svg/blank-image.svg';
             $op_img_path = _WEBROOT_PATH_ . 'files/options/' . $ov['option_img'];
             $op_img = file_exists($op_img_path) && gettype($ov['option_img']) != 'NULL' ? $op_img_path : $op_img_blank;
-
-
-
         ?>
             <div class="col-lg-4 col-md-6 col-12">
                 <label class="btn btn-outline btn-outline-dashed btn-active-light-primary d-flex flex-stack text-start p-4">
@@ -70,7 +65,7 @@ foreach ($options as $cati => $catv) :
                             <input class="form-check-input" type="<?php echo $inp_type ?>" name="<?php echo $inp_name ?>" value="<?php echo $ov['op_id'] ?>" />
                         </div>
                         <div class="symbol symbol-50px image-input-placeholder border border-secondary">
-                            <img src="<?php echo $op_img ?>" alt="Shop" />
+                            <img src="<?php echo $op_img ?>" alt="Options" />
                         </div>
                         <div class="flex-grow-1">
                             <h2 class="d-flex align-items-center fs-4 fw-bold flex-wrap">
@@ -116,3 +111,47 @@ endforeach;
 <textarea class="form-control" name="" id="" row="2" placeholder="เช่น ไม่เอาผัก, ไม่เอากระเทียม"></textarea>
 
 <button class="btn btn-success" onclick="sendOrder()">เพิ่ม</button>
+
+<script>
+    function sendOrder() {
+        var requiredOptions = $(`[data-category][data-required="true"]`);
+        var requireTitles = [];
+        requiredOptions.each(function() {
+            var index = $(this).attr('data-category');
+            var catText = $(this).html();
+            if (!$(`input[name="options[${index}]"]:checked`).length) {
+                requireTitles.push(catText);
+            }
+        });
+
+        if (requireTitles.length > 0) {
+            alert('กรุณาเลือก:' + requireTitles.join(','));
+        } else {
+            let options = {};
+            $(`input[name^="options"]:checked`).each(function() {
+                let index = this.name.match(/\[([0-9]+)\]/)[1];
+                if (!options[index]) {
+                    options[index] = [];
+                }
+                options[index].push(this.value);
+            });
+
+            // Proceed with sending the order
+            $.ajax({
+                url: '<?php echo _WEBROOT_PATH_ . 'actions/order_insert.php' ?>',
+                type: 'POST',
+                data: {
+                    shop_id: '<?php echo $shop_ref ?>',
+                    product_id: '<?php echo $_GET['product'] ?>',
+                    options: options
+                },
+                success: function(response) {
+                    alert('Order sent successfully!');
+                },
+                error: function() {
+                    alert('Failed to send order.');
+                }
+            });
+        }
+    }
+</script>

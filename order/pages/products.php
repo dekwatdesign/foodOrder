@@ -2,8 +2,14 @@
     <a href="?shop=<?php echo $shop_ref ?>" class="<?php echo $cat_ref == 0 ? "active" : "" ?> btn btn-outline btn-outline-dashed btn-outline-primary btn-color-primary btn-active-primary rounded-4 d-flex flex-center gap-1">
         <span>ทั้งหมด</span>
     </a>
-    <?php foreach ($shop_cat as $icat => $vcat) : ?>
-        <a href="?shop=<?php echo $shop_ref ?>&cat=<?php echo $vcat['id'] ?>" class="<?php echo $cat_ref == $vcat['id'] ? "active" : "" ?> btn btn-outline btn-outline-dashed btn-outline-primary btn-color-primary btn-active-primary rounded-4 d-flex flex-center gap-1">
+    <?php foreach ($shop_cat as $icat => $vcat) : 
+            $params = [
+                'shop' => $shop_ref,
+                'cat' => $vcat['id'],
+            ];
+            $paramsString = http_build_query($params);
+        ?>
+        <a href="?<?php echo $paramsString ?>" class="<?php echo $cat_ref == $vcat['id'] ? "active" : "" ?> btn btn-outline btn-outline-dashed btn-outline-primary btn-color-primary btn-active-primary rounded-4 d-flex flex-center gap-1">
             <span><?php echo $vcat['name'] ?></span>
         </a>
     <?php endforeach; ?>
@@ -17,6 +23,14 @@
                 $img_prod_blank = _WEBROOT_PATH_.'assets/medias/svg/blank-image.svg';
                 $img_prod_path = _WEBROOT_PATH_.'files/products/'.$vprod['img_name'].'.'.$vprod['img_ex'];
                 $img_prod = file_exists($img_prod_path) ? $img_prod_path : $img_prod_blank;
+
+                $params = [
+                    'shop' => $shop_ref,
+                    'product' => $vprod['prod_id'],
+                    'action' => 'addcart',
+                ];
+                $paramsString = http_build_query($params);
+
                 ?>
                 <div class="col-lx-2 col-lg-3 col-md-4 col-6">
                     <div class="card">
@@ -28,7 +42,7 @@
                                 <span>บาท</span>
                             </div>
 
-                            <a href="?shop=<?php echo $shop_ref ?>&product=<?php echo $vprod['prod_id'] ?>&action=addcart" 
+                            <a href="?<?php echo $paramsString ?>" 
                                 class="btn btn-success d-flex flex-row flex-nowrap gap-2 flex-center">
                                 <i class="fa-solid fa-cart-plus fs-3"></i> 
                                 <span>ใส่ตะกร้า</span>
